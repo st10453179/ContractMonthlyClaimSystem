@@ -1,0 +1,98 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@{
+    ViewData["Title"] = "Submit Claim";
+}
+
+<h2>Submit Claim</h2>
+
+<form>
+    <label>Month:</label>
+    <input type="text" placeholder="e.g. September" class="form-control" />
+
+    <label>Hours Worked:</label>
+    <input type="number" class="form-control" />
+
+    <label>Hourly Rate:</label>
+    <input type="number" class="form-control" />
+
+    <label>Upload Supporting Document (PDF):</label>
+    <input type="file" class="form-control" accept=".pdf" />
+
+    <br />
+    <button class="btn btn-primary">Submit Claim</button>
+</form>
+
+
+@{
+    ViewData["Title"] = "Track Claim";
+}
+
+<h2>Track Your Claim</h2>
+
+<p>Status: <strong>Pending Approval</strong></p>
+<p>Total Amount: <strong>R 5,000</strong></p>
+
+
+@{
+    ViewData["Title"] = "Review Claims";
+}
+
+<h2>Claims to Verify</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Lecturer</th>
+            <th>Month</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Kgaogelo Mercy</td>
+            <td>August</td>
+            <td>R 4000</td>
+            <td>Pending</td>
+            <td>
+                <button class="btn btn-success">Verify</button>
+                <button class="btn btn-danger">Reject</button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+@{
+    ViewData["Title"] = "Approve Claims";
+}
+
+<h2>Claims to Approve</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Lecturer</th>
+            <th>Month</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Bridget Moganedi</td>
+            <td>August</td>
+            <td>R 6200</td>
+            <td>Verified</td>
+            <td>
+                <button class="btn btn-primary">Approve</button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+

@@ -1,0 +1,936 @@
+﻿@model List<ContractMonthlyClaimSystem.ViewModels.ClaimDetailsViewModel>
+@{
+    ViewData["Title"] = "Track Claims";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-list-check"></i> My Claims</h2>
+            <p class="text-muted">Track the status of all your submitted claims</p>
+        </div>
+        <a href="@Url.Action("Submit", "Claim")" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle"></i> Submit New Claim
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h4>No Claims Found</h4>
+                <p class="text-muted">You haven't submitted any claims yet.</p>
+                <a href="@Url.Action("Submit", "Claim")" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Submit Your First Claim
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-warning bg-gradient text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50">Pending</h6>
+                        <h2 class="mb-0">@Model.Count(c => c.StatusID == 1)</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-info bg-gradient text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50">Verified</h6>
+                        <h2 class="mb-0">@Model.Count(c => c.StatusID == 2)</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-success bg-gradient text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50">Approved</h6>
+                        <h2 class="mb-0">@Model.Count(c => c.StatusID == 3)</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-danger bg-gradient text-white">
+                    <div class="card-body">
+                        <h6 class="text-white-50">Rejected</h6>
+                        <h2 class="mb-0">@Model.Count(c => c.StatusID == 4)</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Claims List -->
+        @foreach (var claim in Model)
+        {
+            <div class="card mb-3 border-0 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <h5 class="mb-0 me-3">
+                                    <i class="fas fa-file-invoice text-primary"></i> Claim #@claim.ClaimID
+                                </h5>
+                                @switch (claim.StatusID)
+                                {
+                                    case 1:
+                                        <span class="badge bg-warning text-dark px-3 py-2">
+                                            <i class="fas fa-clock"></i> Pending Review
+                                        </span>
+                                        break;
+                                    case 2:
+                                        <span class="badge bg-info px-3 py-2">
+                                            <i class="fas fa-check"></i> Verified
+                                        </span>
+                                        break;
+                                    case 3:
+                                        <span class="badge bg-success px-3 py-2">
+                                            <i class="fas fa-check-double"></i> Approved
+                                        </span>
+                                        break;
+                                    case 4:
+                                        <span class="badge bg-danger px-3 py-2">
+                                            <i class="fas fa-times"></i> Rejected
+                                        </span>
+                                        break;
+                                }
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar text-muted"></i>
+                                        <strong>Month:</strong> @claim.Month
+                                    </p>
+                                    <p class="mb-1">
+                                        <i class="fas fa-clock text-muted"></i>
+                                        <strong>Hours:</strong> @claim.HoursWorked hrs
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1">
+                                        <i class="fas fa-money-bill text-muted"></i>
+                                        <strong>Rate:</strong> R @claim.HourlyRate.ToString("N2")/hr
+                                    </p>
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar-plus text-muted"></i>
+                                        <strong>Submitted:</strong> @claim.SubmittedDate.ToString("dd MMM yyyy")
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Status Timeline -->
+                            <div class="mt-3">
+                                <div class="progress" style="height: 25px;">
+                                    @{
+                                        var progress = claim.StatusID switch
+                                        {
+                                            1 => 33,
+                                            2 => 66,
+                                            3 => 100,
+                                            4 => 100,
+                                            _ => 0
+                                        };
+                                        var progressColor = claim.StatusID == 4 ? "bg-danger" : "bg-success";
+                                    }
+                                    <div class="progress-bar @progressColor progress-bar-striped @(claim.StatusID != 3 && claim.StatusID != 4 ? "progress-bar-animated" : "")"
+                                         role="progressbar" style="width: @progress%">
+                                        @if (claim.StatusID == 1)
+                                        {
+                                            <span>Awaiting Coordinator Review</span>
+                                        }
+                                        else if (claim.StatusID == 2)
+                                        {
+                                            <span>Awaiting Manager Approval</span>
+                                        }
+                                        else if (claim.StatusID == 3)
+                                        {
+                                            <span>Claim Approved - Payment Processing</span>
+                                        }
+                                        else if (claim.StatusID == 4)
+                                        {
+                                            <span>Claim Rejected</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(claim.RejectionReason))
+                            {
+                                <div class="alert alert-danger mt-3 mb-0">
+                                    <strong><i class="fas fa-info-circle"></i> Rejection Reason:</strong>
+                                    <p class="mb-0 mt-1">@claim.RejectionReason</p>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="col-md-4 text-end">
+                            <div class="mb-3">
+                                <h3 class="text-success mb-0">R @claim.TotalAmount.ToString("N2")</h3>
+                                <small class="text-muted">Total Amount</small>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a href="@Url.Action("Details", "Claim", new { id = claim.ClaimID })"
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+
+                                @if (claim.Documents != null && claim.Documents.Any())
+                                {
+                                    <button type="button" class="btn btn-outline-secondary"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#docs-@claim.ClaimID">
+                                        <i class="fas fa-paperclip"></i> Documents (@claim.Documents.Count)
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (claim.Documents != null && claim.Documents.Any())
+                    {
+                        <div class="collapse mt-3" id="docs-@claim.ClaimID">
+                            <div class="card card-body bg-light">
+                                <h6><i class="fas fa-folder-open"></i> Supporting Documents</h6>
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var doc in claim.Documents)
+                                    {
+                                        <li class="mb-2">
+                                            <a href="@Url.Action("DownloadDocument", "Claim", new { id = doc.DocumentID })"
+                                               class="text-decoration-none">
+                                                <i class="fas fa-file-pdf text-danger"></i> @doc.FileName
+                                            </a>
+                                            <small class="text-muted ms-2">
+                                                Uploaded: @doc.UploadedAt.ToString("dd MMM yyyy HH:mm")
+                                            </small>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Total Summary -->
+        <div class="card border-0 shadow-sm bg-primary text-white mt-4">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h6 class="text-white-50">Total Claims</h6>
+                        <h3>@Model.Count()</h3>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-white-50">Total Earned (Approved)</h6>
+                        <h3>R @Model.Where(c => c.StatusID == 3).Sum(c => c.TotalAmount).ToString("N2")</h3>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-white-50">Pending Amount</h6>
+                        <h3>R @Model.Where(c => c.StatusID == 1 || c.StatusID == 2).Sum(c => c.TotalAmount).ToString("N2")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .hover-shadow {
+            transition: all 0.3s ease;
+        }
+
+        .hover-shadow:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+    </style>
+}
+     
+
+                     ViewData["Title"] = "Review Claims";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-clipboard-check"></i> Review Pending Claims</h2>
+            <p class="text-muted">Verify lecturer claims for accuracy and completeness</p>
+        </div>
+        <div>
+            <span class="badge bg-warning text-dark fs-5 px-4 py-2">
+                @Model.Count() Pending Claims
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <h4>All Caught Up!</h4>
+                <p class="text-muted">There are no pending claims to review at this time.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Filter and Sort Options -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search by lecturer name or department...">
+                    </div>
+                    <div class="col-md-3">
+                        <select id="departmentFilter" class="form-select">
+                            <option value="">All Departments</option>
+                            @foreach (var dept in Model.Select(c => c.Department).Distinct().OrderBy(d => d))
+                            {
+                                <option value="@dept">@dept</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="sortBy" class="form-select">
+                            <option value="date">Sort by Date</option>
+                            <option value="amount">Sort by Amount</option>
+                            <option value="name">Sort by Lecturer Name</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Claims Table -->
+        <div class="card border-0 shadow">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="claimsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th width="8%">Claim ID</th>
+                                <th width="15%">Lecturer</th>
+                                <th width="12%">Department</th>
+                                <th width="10%">Month</th>
+                                <th width="8%">Hours</th>
+                                <th width="10%">Rate</th>
+                                <th width="10%">Total</th>
+                                <th width="10%">Submitted</th>
+                                <th width="10%">Documents</th>
+                                <th width="17%" class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var claim in Model)
+                            {
+                                <tr class="claim-row" data-lecturer="@claim.LecturerName" data-department="@claim.Department">
+                                    <td class="align-middle">
+                                        <strong class="text-primary">#@claim.ClaimID</strong>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div>
+                                            <strong>@claim.LecturerName</strong><br>
+                                            <small class="text-muted">@claim.LecturerEmail</small>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <span class="badge bg-secondary">@claim.Department</span>
+                                    </td>
+                                    <td class="align-middle">@claim.Month</td>
+                                    <td class="align-middle">
+                                        <strong>@claim.HoursWorked</strong> hrs
+                                    </td>
+                                    <td class="align-middle">R @claim.HourlyRate.ToString("N2")</td>
+                                    <td class="align-middle">
+                                        <strong class="text-success">R @claim.TotalAmount.ToString("N2")</strong>
+                                    </td>
+                                    <td class="align-middle">
+                                        <small>@claim.SubmittedDate.ToString("dd MMM yyyy")<br>@claim.SubmittedDate.ToString("HH:mm")</small>
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (claim.Documents != null && claim.Documents.Any())
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#docsModal-@claim.ClaimID">
+                                                <i class="fas fa-paperclip"></i> @claim.Documents.Count
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">None</span>
+                                        }
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="@Url.Action("Details", "Claim", new { id = claim.ClaimID })"
+                                               class="btn btn-sm btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-success"
+                                                    onclick="verifyClaim(@claim.ClaimID)" title="Verify Claim">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#rejectModal-@claim.ClaimID" title="Reject Claim">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Documents Modal -->
+                                @if (claim.Documents != null && claim.Documents.Any())
+                                {
+                                    <div class="modal fade" id="docsModal-@claim.ClaimID" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-folder-open"></i> Supporting Documents - Claim #@claim.ClaimID
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="list-group">
+                                                        @foreach (var doc in claim.Documents)
+                                                        {
+                                                            <a href="@Url.Action("DownloadDocument", "Claim", new { id = doc.DocumentID })"
+                                                               class="list-group-item list-group-item-action" target="_blank">
+                                                                <div class="d-flex w-100 justify-content-between">
+                                                                    <h6 class="mb-1">
+                                                                        <i class="fas fa-file-pdf text-danger"></i> @doc.FileName
+                                                                    </h6>
+                                                                    <small>@doc.UploadedAt.ToString("dd MMM yyyy HH:mm")</small>
+                                                                </div>
+                                                                <small class="text-muted">Click to download</small>
+                                                            </a>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Reject Modal -->
+                                <div class="modal fade" id="rejectModal-@claim.ClaimID" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form asp-action="Reject" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="claimId" value="@claim.ClaimID" />
+
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-exclamation-triangle"></i> Reject Claim #@claim.ClaimID
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-warning">
+                                                        <strong>Lecturer:</strong> @claim.LecturerName<br>
+                                                        <strong>Amount:</strong> R @claim.TotalAmount.ToString("N2")
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="rejectionReason-@claim.ClaimID" class="form-label">
+                                                            <strong>Reason for Rejection <span class="text-danger">*</span></strong>
+                                                        </label>
+                                                        <textarea name="rejectionReason"
+                                                          id="rejectionReason-@claim.ClaimID"
+                                                          class="form-control"
+                                                          rows="4"
+                                                          required
+                                                          placeholder="Please provide a detailed reason for rejecting this claim..."></textarea>
+                                                        <small class="text-muted">This will be visible to the lecturer</small>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="fas fa-times"></i> Reject Claim
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total Claims to Review</h6>
+                        <h2 class="text-primary">@Model.Count()</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total Amount Pending</h6>
+                        <h2 class="text-success">R @Model.Sum(c => c.TotalAmount).ToString("N2")</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Departments Involved</h6>
+                        <h2 class="text-info">@Model.Select(c => c.Department).Distinct().Count()</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Verify Claim Form (Hidden) -->
+<form id="verifyForm" asp-action="Verify" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="claimId" id="verifyClaimId" />
+</form>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        function verifyClaim(claimId) {
+            if (confirm('Are you sure you want to verify this claim? This action cannot be undone.')) {
+                document.getElementById('verifyClaimId').value = claimId;
+                document.getElementById('verifyForm').submit();
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            filterTable();
+        });
+
+        document.getElementById('departmentFilter').addEventListener('change', function() {
+            filterTable();
+        });
+
+        document.getElementById('sortBy').addEventListener('change', function() {
+            sortTable(this.value);
+        });
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const department = document.getElementById('departmentFilter').value.toLowerCase();
+            const rows = document.querySelectorAll('.claim-row');
+
+            rows.forEach(row => {
+                const lecturer = row.getAttribute('data-lecturer').toLowerCase();
+                const dept = row.getAttribute('data-department').toLowerCase();
+
+                const matchesSearch = lecturer.includes(searchTerm) || dept.includes(searchTerm);
+                const matchesDept = !department || dept === department;
+
+                row.style.display = matchesSearch && matchesDept ? '' : 'none';
+            });
+        }
+
+        function sortTable(sortBy) {
+            const table = document.getElementById('claimsTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr.claim-row'));
+
+            rows.sort((a, b) => {
+                let aVal, bVal;
+
+                switch(sortBy) {
+                    case 'amount':
+                        aVal = parseFloat(a.cells[6].textContent.replace(/[^0-9.-]+/g, ''));
+                        bVal = parseFloat(b.cells[6].textContent.replace(/[^0-9.-]+/g, ''));
+                        return bVal - aVal;
+                    case 'name':
+                        aVal = a.cells[1].textContent.trim();
+                        bVal = b.cells[1].textContent.trim();
+                        return aVal.localeCompare(bVal);
+                    case 'date':
+                    default:
+                        aVal = new Date(a.cells[7].textContent.trim());
+                        bVal = new Date(b.cells[7].textContent.trim());
+                        return aVal - bVal;
+                }
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('departmentFilter').value = '';
+            document.getElementById('sortBy').value = 'date';
+            filterTable();
+            sortTable('date');
+        }
+    </script>
+}
+
+ViewData["Title"] = "Approve Claims";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-stamp"></i> Approve Verified Claims</h2>
+            <p class="text-muted">Final approval for payment processing</p>
+        </div>
+        <div>
+            <span class="badge bg-info fs-5 px-4 py-2">
+                @Model.Count() Verified Claims
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-check-double fa-4x text-success mb-3"></i>
+                <h4>No Claims to Approve</h4>
+                <p class="text-muted">There are no verified claims awaiting approval at this time.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Claims Cards -->
+        @foreach (var claim in Model)
+        {
+            <div class="card mb-4 border-0 shadow">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice-dollar"></i> Claim #@claim.ClaimID
+                        </h5>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-check-circle"></i> Verified by Coordinator
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Lecturer Information -->
+                        <div class="col-md-4">
+                            <h6 class="text-primary mb-3"><i class="fas fa-user-tie"></i> Lecturer Information</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="text-muted"><strong>Name:</strong></td>
+                                    <td>@claim.LecturerName</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Email:</strong></td>
+                                    <td><a href="mailto:@claim.LecturerEmail">@claim.LecturerEmail</a></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Department:</strong></td>
+                                    <td><span class="badge bg-secondary">@claim.Department</span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Claim Details -->
+                        <div class="col-md-4">
+                            <h6 class="text-primary mb-3"><i class="fas fa-info-circle"></i> Claim Details</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="text-muted"><strong>Month:</strong></td>
+                                    <td>@claim.Month</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Hours Worked:</strong></td>
+                                    <td><strong>@claim.HoursWorked</strong> hours</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Hourly Rate:</strong></td>
+                                    <td>R @claim.HourlyRate.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Total Amount:</strong></td>
+                                    <td><h5 class="text-success mb-0">R @claim.TotalAmount.ToString("N2")</h5></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="col-md-4">
+                            <h6 class="text-primary mb-3"><i class="fas fa-history"></i> Timeline</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="text-muted"><strong>Submitted:</strong></td>
+                                    <td>@claim.SubmittedDate.ToString("dd MMM yyyy HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Verified:</strong></td>
+                                    <td>@claim.VerifiedDate?.ToString("dd MMM yyyy HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Days Pending:</strong></td>
+                                    <td>
+                                        <span class="badge bg-warning text-dark">
+                                            @((DateTime.Now - claim.SubmittedDate).Days) days
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(claim.AdditionalNotes))
+                    {
+                        <div class="alert alert-light mt-3">
+                            <strong><i class="fas fa-sticky-note"></i> Additional Notes:</strong>
+                            <p class="mb-0 mt-2">@claim.AdditionalNotes</p>
+                        </div>
+                    }
+
+                    <!-- Supporting Documents -->
+                    @if (claim.Documents != null && claim.Documents.Any())
+                    {
+                        <div class="mt-3">
+                            <h6><i class="fas fa-paperclip"></i> Supporting Documents (@claim.Documents.Count)</h6>
+                            <div class="list-group">
+                                @foreach (var doc in claim.Documents)
+                                {
+                                    <a href="@Url.Action("DownloadDocument", "Claim", new { id = doc.DocumentID })"
+                                       class="list-group-item list-group-item-action" target="_blank">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="fas fa-file-pdf text-danger"></i>
+                                                <strong>@doc.FileName</strong>
+                                            </div>
+                                            <small class="text-muted">
+                                                Uploaded: @doc.UploadedAt.ToString("dd MMM yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <a href="@Url.Action("Details", "Claim", new { id = claim.ClaimID })"
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-eye"></i> View Full Details
+                        </a>
+
+                        <div>
+                            <button type="button" class="btn btn-danger me-2"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#rejectModal-@claim.ClaimID">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                            <button type="button" class="btn btn-success btn-lg px-5"
+                                    onclick="approveClaim(@claim.ClaimID, @claim.TotalAmount)">
+                                <i class="fas fa-check-double"></i> Approve & Process Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reject Modal -->
+            <div class="modal fade" id="rejectModal-@claim.ClaimID" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-action="RejectApproval" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="claimId" value="@claim.ClaimID" />
+
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-exclamation-triangle"></i> Reject Claim #@claim.ClaimID
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <strong>Lecturer:</strong> @claim.LecturerName<br>
+                                    <strong>Amount:</strong> R @claim.TotalAmount.ToString("N2")<br>
+                                    <strong>Status:</strong> Already verified by coordinator
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="rejectionReason-@claim.ClaimID" class="form-label">
+                                        <strong>Reason for Rejection <span class="text-danger">*</span></strong>
+                                    </label>
+                                    <textarea name="rejectionReason"
+                                      id="rejectionReason-@claim.ClaimID"
+                                      class="form-control"
+                                      rows="4"
+                                      required
+                                      placeholder="Please provide a detailed reason for rejecting this claim..."></textarea>
+                                    <small class="text-muted">This will be visible to the lecturer</small>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Reject Claim
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Summary Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-info text-white">
+                    <div class="card-body text-center">
+                        <h6 class="text-white-50">Claims to Approve</h6>
+                        <h2>@Model.Count()</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-success text-white">
+                    <div class="card-body text-center">
+                        <h6 class="text-white-50">Total Amount</h6>
+                        <h2>R @Model.Sum(c => c.TotalAmount).ToString("N2")</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h6 class="text-white-50">Total Hours</h6>
+                        <h2>@Model.Sum(c => c.HoursWorked)</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h6 class="text-white-50">Departments</h6>
+                        <h2>@Model.Select(c => c.Department).Distinct().Count()</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Approve Claim Form (Hidden) -->
+<form id="approveForm" asp-action="ApproveClaim" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="claimId" id="approveClaimId" />
+</form>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        function approveClaim(claimId, amount) {
+            Swal.fire({
+                title: 'Approve Claim?',
+                html: `
+                    <p>You are about to approve this claim for payment processing.</p>
+                    <div class="alert alert-info mt-3">
+                        <strong>Claim ID:</strong> #${claimId}<br>
+                        <strong>Amount:</strong> R ${amount.toFixed(2)}
+                    </div>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-check"></i> Yes, Approve',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('approveClaimId').value = claimId;
+                    document.getElementById('approveForm').submit();
+                }
+            });
+        }
+    </script>
+}
+
+
+
+
