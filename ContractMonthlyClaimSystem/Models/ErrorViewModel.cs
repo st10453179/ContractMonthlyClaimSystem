@@ -7,3 +7,5 @@ namespace ContractMonthlyClaimSystem.Models
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 }
+
+
