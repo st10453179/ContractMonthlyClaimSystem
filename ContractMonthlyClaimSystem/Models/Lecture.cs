@@ -17,3 +17,4 @@
         public List<Claim> Claims { get; set; } = new List<Claim>();
     }
 }
+// End of ContractMonthlyClaimSystem/Models/Lecture.cs
