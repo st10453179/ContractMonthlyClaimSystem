@@ -353,5 +353,6 @@ namespace ContractMonthlyClaimSystem.Controllers
                 if (userRole == "Lecturer")
                 {
                     var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.Email == userEmail
-                
-        
+
+
+}         

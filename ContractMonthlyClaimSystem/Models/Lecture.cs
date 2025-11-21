@@ -1,4 +1,7 @@
-﻿namespace ContractMonthlyClaimSystem.Models
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+namespace ContractMonthlyClaimSystem.Models
 {
     public class Lecture
     {
@@ -14,7 +17,46 @@
 
         public string FullName => $"{FirstName} {LastName}";
 
-        public List<Claim> Claims { get; set; } = new List<Claim>();
+        public DateTime DateJoined { get; set; }
+
+        // Navigation property
+        public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();
     }
 }
-// End of ContractMonthlyClaimSystem/Models/Lecture.cs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

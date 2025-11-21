@@ -1,1 +1,173 @@
-﻿
+﻿@model Claim
+
+@{
+    ViewData["Title"] = "Submit Claim";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Submit Monthly Claim</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="SubmitClaim" method="post" id="claimForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Hours Worked -->
+                        <div class="form-group mb-3">
+                            <label asp-for="HoursWorked" class="form-label">Hours Worked</label>
+                            <input asp-for="HoursWorked" class="form-control" id="hoursWorked"
+                                   placeholder="Enter hours worked (e.g., 40)" />
+                            <small class="form-text text-muted">Maximum 744 hours per month</small>
+                            <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                            <span id="hoursError" class="text-danger"></span>
+                        </div>
+
+                        <!-- Hourly Rate -->
+                        <div class="form-group mb-3">
+                            <label asp-for="HourlyRate" class="form-label">Hourly Rate (R)</label>
+                            <input asp-for="HourlyRate" class="form-control" id="hourlyRate"
+                                   placeholder="Enter hourly rate (e.g., 500)" />
+                            <small class="form-text text-muted">Between R100 - R5000</small>
+                            <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                            <span id="rateError" class="text-danger"></span>
+                        </div>
+
+                        <!-- Total Payment (Auto-calculated) -->
+                        <div class="form-group mb-3">
+                            <label class="form-label">Total Payment (Auto-calculated)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R</span>
+                                <input asp-for="TotalPayment" class="form-control" id="totalPayment"
+                                       readonly style="background-color: #e9ecef;" />
+                            </div>
+                            <span asp-validation-for="TotalPayment" class="text-danger"></span>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Notes" class="form-label">Additional Notes (Optional)</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3"
+                                      placeholder="Any additional information..."></textarea>
+                        </div>
+
+                        <!-- Supporting Document Upload (Optional) -->
+                        <div class="form-group mb-3">
+                            <label class="form-label">Supporting Document (Optional)</label>
+                            <input type="file" class="form-control" name="document" accept=".pdf,.doc,.docx" />
+                            <small class="form-text text-muted">PDF or Word documents only</small>
+                        </div>
+
+                        <!-- Validation Summary Display -->
+                        <div id="validationSummary" class="alert alert-warning" style="display: none;">
+                            <h5>Please correct the following:</h5>
+                            <ul id="validationList"></ul>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="bi bi-check-circle"></i> Submit Claim
+                            </button>
+                            <a asp-action="MyClaims" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to My Claims
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery Validation & Auto-Calculation Script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+
+        // AUTOMATION: Real-time payment calculation
+        function calculatePayment() {
+            var hours = parseFloat($('#hoursWorked').val()) || 0;
+            var rate = parseFloat($('#hourlyRate').val()) || 0;
+
+            var total = hours * rate;
+            $('#totalPayment').val(total.toFixed(2));
+
+            // Trigger validation after calculation
+            validateForm();
+        }
+
+        // Trigger calculation on input change
+        $('#hoursWorked, #hourlyRate').on('input change', function() {
+            calculatePayment();
+        });
+
+        // AUTOMATION: Client-side validation
+        function validateForm() {
+            var isValid = true;
+            var errors = [];
+
+            var hours = parseFloat($('#hoursWorked').val());
+            var rate = parseFloat($('#hourlyRate').val());
+
+            // Clear previous errors
+            $('#hoursError, #rateError').text('');
+            $('#validationList').empty();
+
+            // Validate hours
+            if (isNaN(hours) || hours <= 0) {
+                errors.push('Hours worked must be greater than 0');
+                $('#hoursError').text('Invalid hours');
+                isValid = false;
+            } else if (hours > 744) {
+                errors.push('Hours worked cannot exceed 744 (max hours in a month)');
+                $('#hoursError').text('Exceeds maximum');
+                isValid = false;
+            }
+
+            // Validate rate
+            if (isNaN(rate) || rate < 100) {
+                errors.push('Hourly rate must be at least R100');
+                $('#rateError').text('Rate too low');
+                isValid = false;
+            } else if (rate > 5000) {
+                errors.push('Hourly rate cannot exceed R5000');
+                $('#rateError').text('Rate too high');
+                isValid = false;
+            }
+
+            // Display validation summary
+            if (!isValid) {
+                errors.forEach(function(error) {
+                    $('#validationList').append('<li>' + error + '</li>');
+                });
+                $('#validationSummary').show();
+                $('#submitBtn').prop('disabled', true);
+            } else {
+                $('#validationSummary').hide();
+                $('#submitBtn').prop('disabled', false);
+            }
+
+            return isValid;
+        }
+
+        // Validate on form submission
+        $('#claimForm').on('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                alert('Please correct the errors before submitting');
+            }
+        });
+
+        // Initial validation
+        validateForm();
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

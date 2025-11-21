@@ -1,29 +1,45 @@
-﻿namespace ContractMonthlyClaimSystem.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ContractMonthlyClaimSystem.Models
 {
     public class Claim
     {
-        public int ClaimID { get; set; }
-        public int LecturerID { get; set; }
-        public string Month { get; set; }
-        public double HoursWorked { get; set; }
-        public double HourlyRate { get; set; }
-        public double TotalAmount => HoursWorked * HourlyRate;
-        public int StatusID { get; set; }
-        public string AdditionalNotes { get; set; }
-        public DateTime SubmittedDate { get; set; }
-        public DateTime? VerifiedDate { get; set; }
-        public DateTime? ApprovedDate { get; set; }
-        public int? VerifiedBy { get; set; }
-        public int? ApprovedBy { get; set; }
+        public int ClaimId { get; set; }
+
+        [Required]
+        public int LectureId { get; set; }
+
+        [Required]
+        [Range(1, 744, ErrorMessage = "Hours must be between 1 and 744 (max hours in a month)")]
+        public decimal HoursWorked { get; set; }
+
+        [Required]
+        [Range(100, 5000, ErrorMessage = "Hourly rate must be between R100 and R5000")]
+        public decimal HourlyRate { get; set; }
+
+        [Required]
+        public decimal TotalPayment { get; set; }
+
+        public DateTime SubmissionDate { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string Status { get; set; } // Pending, Approved, Rejected
+
+        public string Notes { get; set; }
+
         public string RejectionReason { get; set; }
 
+        public DateTime? ApprovalDate { get; set; }
 
-        // Navigation properties
-        public Lecture Lecturer { get; set; }
-        public ClaimStatus ClaimStatus { get; set; }
-        public ICollection<SupportingDocument> SupportingDocuments { get; set; }
+        public string ApprovedBy { get; set; }
+
+        // Navigation property
+        public virtual Lecture Lecture { get; set; }
+
+        // Supporting documents (optional)
+        public string DocumentPath { get; set; }
+        public int LecturerId { get; internal set; }
     }
+
 }
-
-
-
